@@ -21,7 +21,7 @@ from uds.uds_communications.TransportProtocols.Can.CanTpTypes import CANTP_MAX_P
     FIRST_FRAME_DATA_START_INDEX, SINGLE_FRAME_DATA_START_INDEX, CONSECUTIVE_FRAME_SEQUENCE_NUMBER_INDEX, \
     CONSECUTIVE_FRAME_SEQUENCE_DATA_START_INDEX, FLOW_CONTROL_BS_INDEX, FLOW_CONTROL_STMIN_INDEX
 from uds import CanConnectionFactory
-# from uds import CanConnection
+#from uds import CanConnection
 from uds import Config
 
 from os import path
@@ -34,6 +34,7 @@ from os import path
 # Will spawn a CanTpListener class for incoming messages
 # depends on a bus object for communication on CAN
 class CanTp(iTp):
+
     configParams = ['reqId', 'resId', 'addressingType']
 
     ##
@@ -45,15 +46,16 @@ class CanTp(iTp):
 
         self.__loadConfiguration(configPath)
         self.__checkKwargs(**kwargs)
+
         # load variables from the config
         self.__N_AE = int(self.__config['canTp']['N_AE'], 16)
         self.__N_TA = int(self.__config['canTp']['N_TA'], 16)
         self.__N_SA = int(self.__config['canTp']['N_SA'], 16)
 
         Mtype = self.__config['canTp']['Mtype']
-        if Mtype == "DIAGNOSTICS":
+        if (Mtype == "DIAGNOSTICS"):
             self.__Mtype = CanTpMTypes.DIAGNOSTICS
-        elif Mtype == "REMOTE_DIAGNOSTICS":
+        elif (Mtype == "REMOTE_DIAGNOSTICS"):
             self.__Mtype = CanTpMTypes.REMOTE_DIAGNOSTICS
         else:
             raise Exception("Do not understand the Mtype config")
@@ -74,14 +76,14 @@ class CanTp(iTp):
         self.__resId = int(self.__config['canTp']['resId'], 16)
 
         # sets up the relevant parameters in the instance
-        if (
+        if(
                 (self.__addressingType == CanTpAddressingTypes.NORMAL) |
                 (self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED)
         ):
             self.__minPduLength = 7
             self.__maxPduLength = 63
             self.__pduStartIndex = 0
-        elif (
+        elif(
                 (self.__addressingType == CanTpAddressingTypes.EXTENDED) |
                 (self.__addressingType == CanTpAddressingTypes.MIXED)
         ):
@@ -92,18 +94,14 @@ class CanTp(iTp):
         # set up the CAN connection
         canConnectionFactory = CanConnectionFactory()
         self.__connection = canConnectionFactory(self.callback_onReceive,
-                                                 self.__resId,  # <-filter
+                                                 self.__resId, # <-filter
                                                  configPath, **kwargs)
-
-        self.__recvBuffer = []
-
-        self.__discardNegResp = bool(self.__config['canTp']['discardNegResp'])
 
     ##
     # @brief used to load the local configuration options and override them with any passed in from a config file
     def __loadConfiguration(self, configPath, **kwargs):
 
-        # load the base config
+        #load the base config
         baseConfig = path.dirname(__file__) + "/config.ini"
         self.__config = Config()
         if path.exists(baseConfig):
@@ -225,7 +223,7 @@ class CanTp(iTp):
                         if state == CanTpState.WAIT_FLOW_CONTROL:
                             if fs == CanTpFsTypes.CONTINUE_TO_SEND:
                                 bs = rxPdu[FC_BS_INDEX]
-                                if bs == 0:
+                                if(bs == 0):
                                     bs = 585
                                 blockList = self.create_blockList(payload[payloadPtr:],
                                                                   bs)
@@ -316,7 +314,6 @@ class CanTp(iTp):
         state = CanTpState.IDLE
 
         timeoutTimer.start()
-
         while endOfMessage_flag is False:
 
             rxPdu = self.getNextBufferedMessage()
@@ -335,8 +332,7 @@ class CanTp(iTp):
                         endOfMessage_flag = True
                     elif N_PCI == CanTpMessageType.FIRST_FRAME:
                         payload = rxPdu[FIRST_FRAME_DATA_START_INDEX:]
-                        payloadLength = ((rxPdu[FIRST_FRAME_DL_INDEX_HIGH] & 0x0F) << 8) + rxPdu[
-                            FIRST_FRAME_DL_INDEX_LOW]
+                        payloadLength = ((rxPdu[FIRST_FRAME_DL_INDEX_HIGH] & 0x0F) << 8) + rxPdu[FIRST_FRAME_DL_INDEX_LOW]
                         payloadPtr = self.__maxPduLength - 1
                         state = CanTpState.SEND_FLOW_CONTROL
                 elif state == CanTpState.RECEIVING_CONSECUTIVE_FRAME:
@@ -347,7 +343,7 @@ class CanTp(iTp):
                         else:
                             sequenceNumberExpected = (sequenceNumberExpected + 1) % 16
                         payload += rxPdu[CONSECUTIVE_FRAME_SEQUENCE_DATA_START_INDEX:]
-                        payloadPtr += self.__maxPduLength
+                        payloadPtr += (self.__maxPduLength)
                         timeoutTimer.restart()
                     else:
                         raise Exception("Unexpected PDU received")
@@ -386,7 +382,7 @@ class CanTp(iTp):
     # @return list, or None if nothing is on the receive list
     def getNextBufferedMessage(self):
         length = len(self.__recvBuffer)
-        if length != 0:
+        if(length != 0):
             return self.__recvBuffer.pop(0)
         else:
             return None
@@ -408,7 +404,7 @@ class CanTp(iTp):
     # @brief function to decode the StMin parameter
     @staticmethod
     def decode_stMin(val):
-        if val <= 0x7F:
+        if (val <= 0x7F):
             time = val / 1000
             return time
         elif (
@@ -436,7 +432,7 @@ class CanTp(iTp):
         blockLength = blockSize * pduLength
 
         working = True
-        while working:
+        while(working):
             if (payloadPtr + pduLength) >= payloadLength:
                 working = False
                 currPdu = fillArray(payload[payloadPtr:], pduLength)
@@ -444,12 +440,12 @@ class CanTp(iTp):
                 blockList.append(currBlock)
 
             if working:
-                currPdu = payload[payloadPtr:payloadPtr + pduLength]
+                currPdu = payload[payloadPtr:payloadPtr+pduLength]
                 currBlock.append(currPdu)
                 payloadPtr += pduLength
                 blockPtr += pduLength
 
-                if blockPtr == blockLength:
+                if(blockPtr == blockLength):
                     blockList.append(currBlock)
                     currBlock = []
                     blockPtr = 0
@@ -474,8 +470,8 @@ class CanTp(iTp):
         transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
         if (
-                (self.__addressingType == CanTpAddressingTypes.NORMAL) |
-                (self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED)
+            (self.__addressingType == CanTpAddressingTypes.NORMAL) |
+            (self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED)
         ):
             transmitData = data
         elif self.__addressingType == CanTpAddressingTypes.MIXED:
@@ -502,3 +498,4 @@ class CanTp(iTp):
     @resIdAddress.setter
     def resIdAddress(self, value):
         self.__resId = value
+
