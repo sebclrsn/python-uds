@@ -172,10 +172,10 @@ class CanTp(iTp):
     ##
     # @brief send method
     # @param [in] payload the payload to be sent
-    def send(self, payload, functionalReq=False):
+    def send(self, payload, functionalReq=False, tpWaitTime = 0.01):
         self.clearBufferedMessages()
         self.encode_isotp(payload, functionalReq)
-        sleep(0.01)
+        sleep(tpWaitTime)
 
     ##
     # @brief encoding method
