@@ -365,6 +365,7 @@ class CanTp(iTp):
         # close can connection
         CanConnectionFactory.clearConnections()
         self.__connection.shutdown()
+        CanConnectionFactory.connections = {}
         self.__connection = None
 
     ##
@@ -410,6 +411,11 @@ class CanTp(iTp):
             return time
         else:
             raise Exception("Unknown STMin time")
+
+    # @brief override transmit method from the asscociated __connection
+    # @param func callable use to repalce actual configured tranmsit method
+    def overwrite_transmit_method(self, func):
+        self.__connection.transmit = func
 
     ##
     # @brief creates the blocklist from the blocksize and payload
