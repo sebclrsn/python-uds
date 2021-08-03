@@ -341,6 +341,8 @@ class CanTp(iTp):
                         timeoutTimer.restart()
                     else:
                         raise Exception("Unexpected PDU received")
+            else:
+                sleep(0.02)
 
             if state == CanTpState.SEND_FLOW_CONTROL:
                 txPdu[N_PCI_INDEX] = 0x30
@@ -365,7 +367,6 @@ class CanTp(iTp):
         # close can connection
         CanConnectionFactory.clearConnections()
         self.__connection.shutdown()
-        CanConnectionFactory.connections = {}
         self.__connection = None
 
     ##
