@@ -14,22 +14,39 @@ import can
 from uds import fillArray
 
 ##
+# @class CanListener
+# @brief This is used due to new implementation of python-can 4.0.0 version
+#
+# Just create a Listener inherit from can.listener(abstract class) and 
+# define the needed method on_message_received
+class CanListener(can.Listener):
+
+    def __init__(self):
+        super().__init__()
+
+    ##
+    # @brief just avoid abstract class error, this class will be override
+    # by callback parameter from CanConnection constructor
+    def on_message_received(self):
+        pass
+
+##
 # @brief Small class to wrap the CAN Bus/Notifier/Listeners to allow multiple clients for each bus/connection
 class CanConnection(object):
 
     def __init__(self, callback, filter, bus, is_external=False):
         self.__bus = bus
         self.__is_external = is_external
-        listener = can.Listener()
+        listener = CanListener()
         listener.on_message_received = callback
-        self.__notifier = can.Notifier(self.__bus, [listener], 0)
+        self.__notifier = can.Notifier(self.__bus, [listener], 1.0)
         self.__listeners = [listener]
         self.addFilter(filter)
 
     ##
     # @brief Adds call back (via additional listener) to the notifier which is attached to this bus
     def addCallback(self, callback):
-        listener = can.Listener()
+        listener = CanListener()
         listener.on_message_received = callback
         self.__notifier.add_listener(listener)
         self.__listeners.append(listener)

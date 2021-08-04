@@ -178,7 +178,7 @@ class CanTp(iTp):
     ##
     # @brief send method
     # @param [in] payload the payload to be sent
-    def send(self, payload, functionalReq=False):
+    def send(self, payload, functionalReq=False, tpWaitTime= 0.01):
 
         payloadLength = len(payload)
         payloadPtr = 0
@@ -280,7 +280,8 @@ class CanTp(iTp):
                             timeoutTimer.start()
                             state = CanTpState.WAIT_FLOW_CONTROL
                             #print("waiting for flow control")
-
+            else:
+                sleep(tpWaitTime)
             txPdu = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             # timer / exit condition checks
             if(timeoutTimer.isExpired()):
@@ -341,6 +342,8 @@ class CanTp(iTp):
                         timeoutTimer.restart()
                     else:
                         raise Exception("Unexpected PDU received")
+            else:
+                sleep(0.01)
 
             if state == CanTpState.SEND_FLOW_CONTROL:
                 txPdu[N_PCI_INDEX] = 0x30
